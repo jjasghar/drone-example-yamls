@@ -1,0 +1,55 @@
+kind: pipeline
+type: docker
+name: notification
+
+steps:
+  - name: notify
+    image: drillster/drone-email
+    settings:
+      host: smtp.DOMAIN.TLD
+      username: postmaster@DOMAIN.TLD
+      password: "d93c4eac99b-IMAFAKEAPASSWORD-63bef1c4"
+      from: drone@DOMAIN.TLD
+    when:
+      status: [ changed, failure ]
+---                                                                                                                                  
+kind: pipeline
+type: exec
+name: default
+
+platform:
+  os: linux
+  arch: amd64
+
+steps:
+  - name: testing the exec runner
+    commands:
+    - echo "yay i'm working!"
+
+  - name: verify that kubectl is in the path
+    commands:
+    - which kubectl
+
+  - name: verify that kind is in the path
+    commands:
+    - which kind
+
+  - name: delete the default kind cluster
+    commands:
+    - kind delete cluster
+
+  - name: create the default kind cluster
+    commands:
+    - kind create cluster
+
+  - name: verify kubectl can talk to kind
+    commands:
+    - kubectl cluster-info --context kind-kind
+ 
+  - name: install tekton in kind
+    commands:
+    - kubectl apply --filename "https://storage.googleapis.com/tekton-releases/pipeline/latest/release.yaml"
+
+  - name: delete the cluster
+    commands:
+    - kind delete cluster
