@@ -20,7 +20,7 @@ steps:
     commands:
     - which kind
 
-  - name: delete the default kind cluster
+  - name: delete cluster and run script
     commands:
     - kind delete cluster
 
@@ -39,20 +39,17 @@ steps:
   - name: delete the cluster
     commands:
     - kind delete cluster
-      
----
 
-kind: pipeline
-type: docker
-name: notification
-
-steps:
-  - name: notify
-    image: drillster/drone-email
-    settings:
-      host: smtp.DOMAIN.TLD
-      username: postmaster@DOMAIN.TLD
-      password: "d93c4eac99b-IMAFAKEAPASSWORD-63bef1c4"
-      from: drone@DOMAIN.TLD
+  - name: email on success
+    commands:
+      - bash -x email-success.sh ${DRONE_COMMIT} ${DRONE_COMMIT_BRANCH} ${DRONE_COMMIT_AUTHOR} ${DRONE_REPO_OWNER} ${DRONE_REPO_NAME} ${DRONE_COMMIT_AUTHOR_EMAIL} ${DRONE_BUILD_NUMBER} ${DRONE_REPO_LINK}
     when:
-      status: [ changed, failure ]
+      status:
+      - success
+
+  - name: email on failure
+    commands:
+      - bash -x email-failure.sh ${DRONE_COMMIT} ${DRONE_COMMIT_BRANCH} ${DRONE_COMMIT_AUTHOR} ${DRONE_REPO_OWNER} ${DRONE_REPO_NAME} ${DRONE_COMMIT_AUTHOR_EMAIL} ${DRONE_BUILD_NUMBER} ${DRONE_REPO_LINK}
+    when:
+      status:
+      - failure 
